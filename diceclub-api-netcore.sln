@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34511.84
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "diceclub-api-netcore.Application", "diceclub-api-netcore\diceclub-api-netcore.Application.csproj", "{F408FDFD-6863-4826-B4DD-D593C2F15075}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "diceclub-api-netcore.Domain", "diceclub-api-netcore.Domain\diceclub-api-netcore.Domain.csproj", "{875CABC9-26B2-453E-A887-E22FD86B3037}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "diceclub-api-netcore.Infrastructure", "diceclub-api-netcore.Infrastructure\diceclub-api-netcore.Infrastructure.csproj", "{13160FEC-B104-4F68-AF57-4261625B5389}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F408FDFD-6863-4826-B4DD-D593C2F15075}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F408FDFD-6863-4826-B4DD-D593C2F15075}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F408FDFD-6863-4826-B4DD-D593C2F15075}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F408FDFD-6863-4826-B4DD-D593C2F15075}.Release|Any CPU.Build.0 = Release|Any CPU
+		{875CABC9-26B2-453E-A887-E22FD86B3037}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{875CABC9-26B2-453E-A887-E22FD86B3037}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{875CABC9-26B2-453E-A887-E22FD86B3037}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{875CABC9-26B2-453E-A887-E22FD86B3037}.Release|Any CPU.Build.0 = Release|Any CPU
+		{13160FEC-B104-4F68-AF57-4261625B5389}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{13160FEC-B104-4F68-AF57-4261625B5389}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{13160FEC-B104-4F68-AF57-4261625B5389}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{13160FEC-B104-4F68-AF57-4261625B5389}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {CF802261-408A-462F-B696-796ABE314022}
+	EndGlobalSection
+EndGlobal
