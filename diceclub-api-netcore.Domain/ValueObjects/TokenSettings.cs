@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace diceclub_api_netcore.Domain.ValueObjects
 {
-    public class ApiUrls
+    public class TokenSettings
     {
-        public string EmailConfirmationUrl { get; set; } = string.Empty;
-        public string PasswordResetUrl { get; set; } = string.Empty;
+        public string TokenKey { get; set; } = string.Empty;
+        public string TokenIssuer {  get; set; } = string.Empty;
     }
 }

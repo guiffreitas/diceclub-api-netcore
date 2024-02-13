@@ -2,7 +2,9 @@ using AutoMapper;
 using diceclub_api_netcore.Domain.Entities;
 using diceclub_api_netcore.Domain.Interfaces.Services;
 using diceclub_api_netcore.Dtos;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 
 namespace diceclub_backend_api.Controllers
 {
@@ -20,8 +22,15 @@ namespace diceclub_backend_api.Controllers
             this.userService = userService;
         }
 
+        /// <summary>
+        /// Route for user register
+        /// </summary>
+        /// <param name="userDto"></param>
+        /// <returns></returns>
         [HttpPost("register")]
-        public async Task<IActionResult> Register(UserDto userDto)
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> Register([Required] UserDto userDto)
         {
             if (!userDto.IsValid)
             {
@@ -46,8 +55,16 @@ namespace diceclub_backend_api.Controllers
             }
         }
 
+        /// <summary>
+        /// Confirm user email after registered
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <param name="confirmationTokem"></param>
+        /// <returns></returns>
         [HttpPost("confirmEmail")]
-        public async Task<IActionResult> ConfirmEmail(string userId, string confirmationTokem)
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> ConfirmEmail([Required] string userId, [Required] string confirmationTokem)
         {
             if(confirmationTokem != null)
             {
@@ -62,6 +79,32 @@ namespace diceclub_backend_api.Controllers
             }
 
             return BadRequest("Invalid confirmation token");
+        }
+
+        /// <summary>
+        /// Login for users
+        /// </summary>
+        /// <param name="email"></param>
+        /// <param name="password"></param>
+        /// <returns></returns>
+        [HttpPost("login")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> Login([Required] string email, [Required] string password)
+        {
+            if (!string.IsNullOrWhiteSpace(email) && !string.IsNullOrWhiteSpace(password))
+            {
+                var (result, userToken) = await userService.LoginUser(email, password);
+
+                if (result.Succeeded)
+                {
+                    return Ok(userToken);
+                }
+
+                return BadRequest(result.Errors.FirstOrDefault()?.Description);
+            }
+
+            return BadRequest("Invalid user information");
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using diceclub_api_netcore.Domain.Entities;
 using diceclub_api_netcore.Domain.Interfaces.Services;
+using diceclub_api_netcore.Domain.Templates;
 using Microsoft.AspNetCore.Identity.UI.Services;
 
 namespace diceclub_api_netcore.Domain.Services
@@ -24,7 +25,9 @@ namespace diceclub_api_netcore.Domain.Services
                     throw new ArgumentNullException(nameof(email) + $" null for user {user.UserName}");
                 }
 
-                var html = await File.ReadAllTextAsync("../Templates/EmailConfirmation.html");
+                var path = HTMLTemplates.EmailConfirmationPath;
+
+                var html = await File.ReadAllTextAsync(HTMLTemplates.EmailConfirmationPath);
 
                 html = html.Replace("ConfirmationLink", confirmationLink);
 

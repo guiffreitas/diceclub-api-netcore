@@ -1,4 +1,5 @@
 ﻿using diceclub_api_netcore.Domain.Entities;
+using diceclub_api_netcore.Domain.Models;
 using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
@@ -12,5 +13,8 @@ namespace diceclub_api_netcore.Domain.Interfaces.Services
     {
         Task<IdentityResult> RegisterUser(User user, string password);
         Task<IdentityResult> ConfirmEmail(string userId, string confirmationToken);
+        Task<(IdentityResult Result, string UserToken)> LoginUser(string email, string password);
+        Task<ResultModel<bool>> UserIsNew(User user);
+
     }
 }
