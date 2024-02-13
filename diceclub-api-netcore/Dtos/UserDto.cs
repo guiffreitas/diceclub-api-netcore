@@ -4,13 +4,18 @@ namespace diceclub_api_netcore.Dtos
 {
     public class UserDto : Contract<UserDto>
     {
-        public string UserName { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty;
-        public string RePassword { get; set; } = string.Empty;
+        public string UserName { get; set; }
+        public string Email { get; set; }
+        public string Password { get; set; }
+        public string RePassword { get; set; }
 
-        public UserDto()
+        public UserDto(string username, string email, string password, string rePassword)
         {
+            UserName = username;
+            Email = email;
+            Password = password;
+            RePassword = rePassword;
+
             Requires().IsTrue(ValidUserNameOrEmail(), "User name", "Valid username or email must be provided");
             Requires().IsNotNullOrEmpty(Password, "Password", "Invalid password");
             Requires().AreEquals(Password, RePassword, "Password", "Invalid password confirmation");

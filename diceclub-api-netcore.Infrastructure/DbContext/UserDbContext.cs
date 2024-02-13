@@ -13,37 +13,37 @@ namespace diceclub_api_netcore.Infrastructure.DbContext
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<IdentityUser<int>>(b =>
+            modelBuilder.Entity<User>(b =>
             {
                 b.ToTable("user");
             });
 
-            modelBuilder.Entity<IdentityUserClaim<string>>(b =>
+            modelBuilder.Entity<IdentityUserClaim<int>>(b =>
             {
                 b.ToTable("user_claim");
             });
 
-            modelBuilder.Entity<IdentityUserLogin<string>>(b =>
+            modelBuilder.Entity<IdentityUserLogin<int>>(b =>
             {
                 b.ToTable("user_login");
             });
 
-            modelBuilder.Entity<IdentityUserToken<string>>(b =>
+            modelBuilder.Entity<IdentityUserToken<int>>(b =>
             {
                 b.ToTable("user_token");
             });
 
-            modelBuilder.Entity<IdentityRole>(b =>
+            modelBuilder.Entity<IdentityRole<int>>(b =>
             {
                 b.ToTable("role");
             });
 
-            modelBuilder.Entity<IdentityRoleClaim<string>>(b =>
+            modelBuilder.Entity<IdentityRoleClaim<int>>(b =>
             {
                 b.ToTable("role_claim");
             });
 
-            modelBuilder.Entity<IdentityUserRole<string>>(b =>
+            modelBuilder.Entity<IdentityUserRole<int>>(b =>
             {
                 b.ToTable("user_role");
             });
