@@ -3,11 +3,13 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using diceclub_api_netcore.Domain.Entities;
 
-namespace diceclub_api_netcore.Infrastructure.DbContext
+namespace diceclub_api_netcore.Infrastructure.Contexts
 {
-    public class UserDbContext : IdentityDbContext<User, IdentityRole<int>, int>
+    public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<int>, int>
     {
-        public UserDbContext(DbContextOptions<UserDbContext> options) : base(options) { }
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
+
+        public DbSet<UserProfile> Profiles { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -47,6 +49,13 @@ namespace diceclub_api_netcore.Infrastructure.DbContext
             {
                 b.ToTable("user_role");
             });
+
+            modelBuilder.Entity<UserProfile>()
+                .ToTable("user_profile")
+                .HasOne(e => e.User)
+                .WithOne(e => e.Profile)
+                .HasForeignKey<UserProfile>(e => e.UserId)
+                .IsRequired();
         }
     }
 }
