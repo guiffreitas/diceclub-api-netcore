@@ -1,15 +1,18 @@
 using diceclub_api_netcore.Configures;
 using diceclub_api_netcore.Domain.Entities;
+using diceclub_api_netcore.Domain.Interfaces.Repositories;
 using diceclub_api_netcore.Domain.Interfaces.Services;
 using diceclub_api_netcore.Domain.Services;
 using diceclub_api_netcore.Domain.ValueObjects;
 using diceclub_api_netcore.Infrastructure.DbContext;
+using diceclub_api_netcore.Infrastructure.Repositories;
 using diceclub_api_netcore.Infrastructure.Smtp;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using MySqlConnector;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,6 +34,7 @@ builder.Services.AddTransient<IEmailSender, EmailSender>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<ICacheRedisRepository, CacheRedisRepository>();
 
 builder.Services.AddTransient(_ => new MySqlConnection(builder.Configuration.GetConnectionString("dice_club_db")));
 
@@ -41,9 +45,11 @@ builder.Services.AddDbContext<UserDbContext>(options => {
     b => b.MigrationsAssembly("diceclub-api-netcore.Infrastructure"));
 });
 
+//Inject conneciton for Redis server
+builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer
+            .Connect(builder.Configuration.GetConnectionString("redis")!));
+
 //Inject Identity services, EF rellations for User Class and Token generation for user confirmation and password reset 
-
-
 builder.Services.AddDefaultIdentity<User>(options =>
         {
             options.SignIn.RequireConfirmedEmail = true;

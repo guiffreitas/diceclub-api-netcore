@@ -1,12 +1,13 @@
-﻿using diceclub_api_netcore.Domain.Interfaces.Services;
+﻿using diceclub_api_netcore.Domain.Entities;
+using diceclub_api_netcore.Domain.Enums;
+using diceclub_api_netcore.Domain.Interfaces.Repositories;
+using diceclub_api_netcore.Domain.Interfaces.Services;
+using diceclub_api_netcore.Domain.Models;
 using diceclub_api_netcore.Domain.ValueObjects;
-using Microsoft.AspNetCore.WebUtilities;
-using diceclub_api_netcore.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
 using System.Text;
-using Microsoft.AspNetCore.Mvc;
-using diceclub_api_netcore.Domain.Models;
 
 namespace diceclub_api_netcore.Domain.Services
 {
@@ -14,6 +15,7 @@ namespace diceclub_api_netcore.Domain.Services
     {
         private readonly IEmailService emailService;
         private readonly ITokenService tokenService;
+        private readonly ICacheRedisRepository cacheRepository;
 
         private readonly UserManager<User> userManager;
         private readonly SignInManager<User> signInManager;
@@ -22,13 +24,15 @@ namespace diceclub_api_netcore.Domain.Services
 
         public UserService(
             IEmailService emailService, 
-            ITokenService tokenService, 
+            ITokenService tokenService,
+            ICacheRedisRepository cacheRepository,
             UserManager<User> userManager, 
             SignInManager<User> signInManager, 
             IOptions<ApiUrls> apiUrls)
         {
             this.emailService = emailService;
             this.tokenService = tokenService;
+            this.cacheRepository = cacheRepository;
             this.userManager = userManager;
             this.signInManager = signInManager;
             this.apiUrls = apiUrls.Value;
@@ -107,7 +111,7 @@ namespace diceclub_api_netcore.Domain.Services
             }) ;
         }
 
-        public async Task<(IdentityResult Result, string UserToken)> LoginUser(string email, string password)
+        public async Task<LoginModel> LoginUser(string email, string password)
         {
             try
             {
@@ -115,39 +119,44 @@ namespace diceclub_api_netcore.Domain.Services
 
                 if (user == default)
                 {
-                    return (IdentityResult.Failed(new IdentityError()
+                    return new LoginModel()
                     {
-                        Description = $"User {email} could not be found",
-                        Code = "404"
-                    }), string.Empty);
+                        Success = false,
+                        Message = $"User {email} could not be found",
+                    };
                 }
 
                 var result = await signInManager.PasswordSignInAsync(user, password, false, false);
 
                 if(!result.Succeeded)
                 {
-                    return (IdentityResult.Failed(new IdentityError()
+                    return new LoginModel()
                     {
-                        Description = $"Login not allowed",
-                        Code = "400"
-                    }), string.Empty);
+                        Success = false,
+                        Message = $"Login not allowed",
+                    };
                 }
 
-                var userToken = tokenService.GetUserToken(user);
+                (var userToken, var refreshToken) = GenerateLoginTokens(user);
 
-                if (!string.IsNullOrWhiteSpace(userToken)) 
+                if (string.IsNullOrWhiteSpace(userToken) || string.IsNullOrWhiteSpace(refreshToken))
                 {
-                    await userManager.SetAuthenticationTokenAsync(user, string.Empty, "auth_token", userToken);
-
-                    return (IdentityResult.Success, userToken);
+                    return new LoginModel()
+                    {
+                        Success = false,
+                        Message = $"User's tokens could not be created",
+                    };
                 }
 
-                return (IdentityResult.Failed(new IdentityError()
-                {
-                    Description = $"User token could not be created",
-                    Code = "500"
-                }), string.Empty);
-     
+                await PersistLoginToken(user, userToken, refreshToken);
+
+                return new LoginModel() 
+                { 
+                    Success = true,
+                    Message = $"User {user.UserName} logged",
+                    UserToken = userToken,
+                    RefreshToken = refreshToken
+                };
             }
             catch (Exception ex)
             {
@@ -155,30 +164,86 @@ namespace diceclub_api_netcore.Domain.Services
             }
         }
 
-        public async Task<ResultModel<bool>> UserIsNew(User user)
+        public async Task<LoginModel> RefreshLogin(string userToken, string refreshToken)
         {
             try
             {
-                var previousUser = await userManager.FindByEmailAsync(user.Email!);
+                var username = tokenService.GetUsernameFromToken(userToken);
 
-                if(previousUser != default)
+                if (string.IsNullOrWhiteSpace(username))
                 {
-                    return new ResultModel<bool> { Result = false, Message = $"Email {user.UserName} is already registered" };
+                    return new LoginModel()
+                    {
+                        Success = false,
+                        Message = $"User's token is invalid",
+                    };
                 }
 
-                previousUser = await userManager.FindByNameAsync(user.UserName!);
+                var user = await userManager.FindByNameAsync(username);
 
-                if (previousUser != default)
+                if(user == default)
                 {
-                    return new ResultModel<bool> { Result = false, Message = $"Username {user.UserName} is already been using" };
+                    return new LoginModel()
+                    {
+                        Success = false,
+                        Message = $"User not found",
+                    };
                 }
 
-                return new ResultModel<bool> { Result = true };
+                var cacheRefreshToken = await cacheRepository.HashGetAsync<string>(string.Empty, user.Id.ToString(), CacheType.RefreshToken);
+
+                if (cacheRefreshToken == default || !cacheRefreshToken!.Equals(refreshToken))
+                {
+                    return new LoginModel()
+                    {
+                        Success = false,
+                        Message = $"Invalid refresh token",
+                    };
+                }
+
+                (var newUserToken, var newRefreshToken) = GenerateLoginTokens(user);
+
+                if (string.IsNullOrWhiteSpace(newUserToken) || string.IsNullOrWhiteSpace(newRefreshToken))
+                {
+                    return new LoginModel()
+                    {
+                        Success = false,
+                        Message = $"User's tokens could not be created",
+                    };
+                }
+
+                await PersistLoginToken(user, newUserToken, newRefreshToken);
+
+                return new LoginModel()
+                {
+                    Success = true,
+                    Message = $"User {user.UserName} logged",
+                    UserToken = userToken,
+                    RefreshToken = refreshToken
+                };
             }
             catch(Exception ex)
             {
-                throw new Exception("User information could not be verified. Error: " + ex.Message, ex);
+                throw new Exception("User could not be signed up. Error: " + ex.Message, ex);
             }
+        }
+
+        private (string UserToken, string RefreshToken) GenerateLoginTokens(User user)
+        {
+            var userToken = tokenService.GenerateUserToken(user);
+
+            var refreshToken = tokenService.GenerateRefreshToken();
+
+            return(userToken, refreshToken);
+        }
+
+        private async Task PersistLoginToken(User user,string userToken, string refreshToken)
+        {
+            var persistAuthToken = userManager.SetAuthenticationTokenAsync(user, string.Empty, Parameters.Token.AuthToken, userToken);
+
+            var persistRefreshToken = cacheRepository.HashSetAsync(string.Empty, user.Id.ToString(), refreshToken, CacheType.RefreshToken, Parameters.Token.RefreshTokenExpiration);
+
+            await Task.WhenAll(persistAuthToken, persistRefreshToken);
         }
     }
 }

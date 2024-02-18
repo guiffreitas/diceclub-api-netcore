@@ -9,6 +9,9 @@ namespace diceclub_api_netcore.Domain.Interfaces.Services
 {
     public interface ITokenService
     {
-        string GetUserToken(User user);
+        string GenerateUserToken(User user);
+        string GenerateRefreshToken();
+        string? GetUsernameFromToken(string token);
+
     }
 }
