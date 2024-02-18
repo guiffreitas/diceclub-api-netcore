@@ -6,10 +6,11 @@ using System.Threading.Tasks;
 
 namespace diceclub_api_netcore.Domain.Models
 {
-    public class ResultModel<T>
+    public class LoginModel
     {
         public bool Success { get; set; }
         public string Message { get; set; } = string.Empty;
-        public T? Result { get; set; }
+        public string UserToken { get; set; } = string.Empty;
+        public string RefreshToken { get; set; } = string.Empty;
     }
 }

@@ -2,8 +2,10 @@ using AutoMapper;
 using diceclub_api_netcore.Domain.Entities;
 using diceclub_api_netcore.Domain.Interfaces.Services;
 using diceclub_api_netcore.Dtos;
-using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Net.Http.Headers;
 using System.ComponentModel.DataAnnotations;
 
 namespace diceclub_backend_api.Controllers
@@ -34,7 +36,7 @@ namespace diceclub_backend_api.Controllers
         {
             if (!userDto.IsValid)
             {
-                return BadRequest("Invalid user information");
+                return BadRequest("Invalid user information.");
             }
             try
             {
@@ -44,7 +46,7 @@ namespace diceclub_backend_api.Controllers
 
                 if(result.Succeeded)
                 {
-                    return Ok("User registered");
+                    return Ok("User registered.");
                 }
 
                 return BadRequest(result.Errors.FirstOrDefault()?.Description);
@@ -72,13 +74,13 @@ namespace diceclub_backend_api.Controllers
 
                 if (result.Succeeded)
                 {
-                    return Ok("User confirmed");
+                    return Ok("User confirmed.");
                 }
 
                 return BadRequest(result.Errors.FirstOrDefault()?.Description);
             }
 
-            return BadRequest("Invalid confirmation token");
+            return BadRequest("Invalid confirmation token.");
         }
 
         /// <summary>
@@ -94,17 +96,44 @@ namespace diceclub_backend_api.Controllers
         {
             if (!string.IsNullOrWhiteSpace(email) && !string.IsNullOrWhiteSpace(password))
             {
-                var (result, userToken) = await userService.LoginUser(email, password);
+                var login = await userService.LoginUser(email, password);
 
-                if (result.Succeeded)
+                if (login.Success)
                 {
-                    return Ok(userToken);
+                    return Ok(login);
                 }
 
-                return BadRequest(result.Errors.FirstOrDefault()?.Description);
+                return BadRequest(login.Message);
             }
 
-            return BadRequest("Invalid user information");
+            return BadRequest("Invalid user information.");
+        }
+
+        /// <summary>
+        /// Refresh user acess token 
+        /// </summary>
+        /// <param name="refreshToken"></param>
+        /// <returns></returns>
+        [HttpPost("refreshLogin")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> RefreshLogin([FromBody] string refreshToken)
+        {
+            var userToken = Request.Headers[HeaderNames.Authorization].FirstOrDefault()?.Replace("Bearer ","");
+
+            if (!string.IsNullOrWhiteSpace(userToken) && !string.IsNullOrWhiteSpace(refreshToken))
+            {
+                var login = await userService.RefreshLogin(userToken!, refreshToken);
+
+                if (login.Success)
+                {
+                    return Ok(login);
+                }
+
+                return BadRequest(login.Message);
+            }
+
+            return BadRequest("Invalid user information.");
         }
     }
 }
