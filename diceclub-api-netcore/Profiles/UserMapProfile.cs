@@ -4,9 +4,9 @@ using diceclub_api_netcore.Dtos;
 
 namespace diceclub_api_netcore.Profiles
 {
-    public class UserProfile : Profile
+    public class UserMapProfile : Profile
     {
-        public UserProfile() 
+        public UserMapProfile() 
         {
             CreateMap<UserDto, User>();
         }

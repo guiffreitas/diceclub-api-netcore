@@ -4,7 +4,7 @@ using diceclub_api_netcore.Domain.Interfaces.Repositories;
 using diceclub_api_netcore.Domain.Interfaces.Services;
 using diceclub_api_netcore.Domain.Services;
 using diceclub_api_netcore.Domain.ValueObjects;
-using diceclub_api_netcore.Infrastructure.DbContext;
+using diceclub_api_netcore.Infrastructure.Contexts;
 using diceclub_api_netcore.Infrastructure.Repositories;
 using diceclub_api_netcore.Infrastructure.Smtp;
 using Microsoft.AspNetCore.Identity;
@@ -39,7 +39,7 @@ builder.Services.AddScoped<ICacheRedisRepository, CacheRedisRepository>();
 builder.Services.AddTransient(_ => new MySqlConnection(builder.Configuration.GetConnectionString("dice_club_db")));
 
 //Inject connection for db context
-builder.Services.AddDbContext<UserDbContext>(options => {
+builder.Services.AddDbContext<ApplicationDbContext>(options => {
     var conn = builder.Configuration.GetConnectionString("dice_club_db");
     options.UseMySql(conn, ServerVersion.AutoDetect(conn), 
     b => b.MigrationsAssembly("diceclub-api-netcore.Infrastructure"));
@@ -55,7 +55,7 @@ builder.Services.AddDefaultIdentity<User>(options =>
             options.SignIn.RequireConfirmedEmail = true;
             options.User.RequireUniqueEmail = true;
         })
-        .AddEntityFrameworkStores<UserDbContext>()
+        .AddEntityFrameworkStores<ApplicationDbContext>()
         .AddDefaultTokenProviders();
 
 //Inject configure for JWT Bearer for authentication

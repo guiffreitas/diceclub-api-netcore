@@ -2,6 +2,7 @@ using AutoMapper;
 using diceclub_api_netcore.Domain.Entities;
 using diceclub_api_netcore.Domain.Interfaces.Services;
 using diceclub_api_netcore.Dtos;
+using diceclub_api_netcore.Profiles;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

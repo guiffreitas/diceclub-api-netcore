@@ -6,27 +6,36 @@ namespace diceclub_api_netcore.Dtos
     {
         public string UserName { get; set; }
         public string Email { get; set; }
+        public DateTime BirthDate { get; set; }
         public string Password { get; set; }
         public string RePassword { get; set; }
 
-        public UserDto(string username, string email, string password, string rePassword)
+        public UserDto(string username, string email, DateTime birthDate, string password, string rePassword)
         {
             UserName = username;
             Email = email;
+            BirthDate = birthDate;
             Password = password;
             RePassword = rePassword;
 
-            Requires().IsTrue(ValidUserNameOrEmail(), "User name", "Valid username or email must be provided");
-            Requires().IsNotNullOrEmpty(Password, "Password", "Invalid password");
-            Requires().AreEquals(Password, RePassword, "Password", "Invalid password confirmation");
+            Requires().IsTrue(ValidUserName(), nameof(UserName), "Invalid") ;
+            Requires().IsEmail(Email, nameof(Email), "Invalid");
+            Requires().IsTrue(ValidBirthDate(), nameof(BirthDate), "Invalid");
+            Requires().IsNotNullOrEmpty(Password, nameof(Password), "Invalid");
+            Requires().AreEquals(Password, RePassword, nameof(rePassword), "Invalid");
         }
 
-        private bool ValidUserNameOrEmail()
+        private bool ValidUserName()
         {
-            var userNameValid = !string.IsNullOrEmpty(UserName) && !UserName.Any(char.IsWhiteSpace) && UserName.Length > 3;
-            var emailValid = Requires().IsEmail(Email, nameof(Email)).IsValid;
+            return !string.IsNullOrEmpty(UserName) && !UserName.Any(char.IsWhiteSpace) && UserName.Length > 3;
+        }
 
-            return userNameValid || emailValid;
+        private bool ValidBirthDate()
+        {
+            var existValue = Requires().IsNotNull(BirthDate, nameof(BirthDate)).IsValid;
+            var notFutureDate = Requires().IsTrue(BirthDate < DateTime.UtcNow, nameof(BirthDate)).IsValid;
+
+            return existValue && notFutureDate;
         }
     }
 }
