@@ -12,7 +12,7 @@ using System.ComponentModel.DataAnnotations;
 namespace diceclub_backend_api.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("user")]
     public class UserController : ControllerBase
     {
 
@@ -67,7 +67,7 @@ namespace diceclub_backend_api.Controllers
         [HttpPost("confirmEmail")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> ConfirmEmail([Required] string userId, [Required] string confirmationTokem)
+        public async Task<IActionResult> ConfirmEmail([Required] int userId, [Required] string confirmationTokem)
         {
             if(confirmationTokem != null)
             {

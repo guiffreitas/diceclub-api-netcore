@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace diceclub_api_netcore.Domain.Entities
 {
@@ -11,7 +10,7 @@ namespace diceclub_api_netcore.Domain.Entities
         public string Name { get; set; } = string.Empty;
         public string Surname { get; set; } = string.Empty;
         public string About { get; set; } = string.Empty;
-        public DateTime UpdateDate { get; set; }
+        public DateTime UpdateTime { get; set; }
 
         //Required DBcontext reference navigation to parent, One to One relation
         public User User { get; set; } = null!;
