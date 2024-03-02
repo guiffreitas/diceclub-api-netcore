@@ -15,5 +15,6 @@ namespace diceclub_api_netcore.Domain.Interfaces.Services
         Task<IdentityResult> ConfirmEmail(int userId, string confirmationToken);
         Task<LoginModel> LoginUser(string email, string password);
         Task<LoginModel> RefreshLogin(string userToken, string refreshToken);
+        Task<int?> GetUserIdByUsername(string username);
     }
 }
