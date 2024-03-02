@@ -12,5 +12,6 @@ namespace diceclub_api_netcore.Domain.Interfaces.Services
     {
         Task<ResultModel<string>> CreateUserProfile(UserProfile profile, CancellationToken cancellationToken);
         Task<ResultModel<string>> UpdateUserProfile(UserProfile profile, CancellationToken cancellationToken);
+        Task<ResultModel<UserProfile>> GetUserProfile(int userId, CancellationToken cancellationToken);
     }
 }

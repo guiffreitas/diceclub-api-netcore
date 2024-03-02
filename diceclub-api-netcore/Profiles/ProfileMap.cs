@@ -9,6 +9,7 @@ namespace diceclub_api_netcore.Profiles
         public ProfileMap() 
         {
             CreateMap<UserProfileDto, UserProfile>();
+            CreateMap<UserProfile, UserProfileDto>();
         }
     }
 }

@@ -41,5 +41,24 @@ namespace diceclub_api_netcore.Domain.Services
                 throw new Exception(ex.Message, ex);
             }
         }
+
+        public async Task<ResultModel<UserProfile>> GetUserProfile(int userId, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var profile = await profileRepository.GetUserProfileByUserId(userId, cancellationToken);
+
+                if (profile == null)
+                {
+                    return new ResultModel<UserProfile> { Success = false, Message = "User profile not found" };
+                }
+
+                return new ResultModel<UserProfile> { Success = true, Result = profile };
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message, ex);
+            }
+        }
     }
 }
