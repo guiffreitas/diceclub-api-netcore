@@ -1,11 +1,7 @@
 ﻿using diceclub_api_netcore.Domain.Entities;
 using diceclub_api_netcore.Domain.Interfaces.Repositories;
 using diceclub_api_netcore.Infrastructure.Contexts;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace diceclub_api_netcore.Infrastructure.Repositories
 {
@@ -20,9 +16,27 @@ namespace diceclub_api_netcore.Infrastructure.Repositories
 
         public async Task CreateUserProfile(UserProfile profile, CancellationToken cancellationToken)
         {
-            await context.AddAsync(profile, cancellationToken);
+            await context.Profiles.AddAsync(profile, cancellationToken);
 
-            context.SaveChanges();
+            await context.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task UpdateUserProfile(UserProfile profile, CancellationToken cancellationToken)
+        {
+            var currentProfile = await context.Profiles.FirstOrDefaultAsync(p => p.UserId == profile.UserId, cancellationToken);
+
+            if(currentProfile == null)
+            {
+                await CreateUserProfile(profile, cancellationToken);
+
+                return;
+            }
+
+            profile.Id = currentProfile.Id;
+
+            context.Entry(currentProfile).CurrentValues.SetValues(profile);
+
+            await context.SaveChangesAsync(cancellationToken);
         }
     }
 }

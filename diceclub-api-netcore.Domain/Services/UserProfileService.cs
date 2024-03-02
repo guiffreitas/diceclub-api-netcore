@@ -27,5 +27,19 @@ namespace diceclub_api_netcore.Domain.Services
                 throw new Exception(ex.Message, ex);
             }
         }
+
+        public async Task<ResultModel<string>> UpdateUserProfile(UserProfile profile, CancellationToken cancellationToken)
+        {
+            try
+            {
+                await profileRepository.UpdateUserProfile(profile, cancellationToken);
+
+                return new ResultModel<string> { Success = true, Result = "Profile Updated" };
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message, ex);
+            }
+        }
     }
 }

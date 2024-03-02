@@ -39,13 +39,14 @@ builder.Services.AddScoped<ICacheRedisRepository, CacheRedisRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserProfileRepository, UserProfileRepository>();
 
-builder.Services.AddTransient(_ => new MySqlConnection(builder.Configuration.GetConnectionString("dice_club_db")));
+builder.Services.AddScoped(_ => new MySqlConnection(builder.Configuration.GetConnectionString("dice_club_db")));
 
 //Inject connection for db context
-builder.Services.AddDbContext<ApplicationDbContext>(options => {
+
+builder.Services.AddDbContext<ApplicationDbContext>(options => 
+{
     var conn = builder.Configuration.GetConnectionString("dice_club_db");
-    options.UseMySql(conn, ServerVersion.AutoDetect(conn), 
-    b => b.MigrationsAssembly("diceclub-api-netcore.Infrastructure"));
+    options.UseMySql(conn, ServerVersion.AutoDetect(conn), b => b.MigrationsAssembly("diceclub-api-netcore.Infrastructure"));
 });
 
 //Inject conneciton for Redis server
