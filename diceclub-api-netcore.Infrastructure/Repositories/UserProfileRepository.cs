@@ -2,6 +2,8 @@
 using diceclub_api_netcore.Domain.Interfaces.Repositories;
 using diceclub_api_netcore.Infrastructure.Contexts;
 using Microsoft.EntityFrameworkCore;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Threading;
 
 namespace diceclub_api_netcore.Infrastructure.Repositories
 {
@@ -37,6 +39,11 @@ namespace diceclub_api_netcore.Infrastructure.Repositories
             context.Entry(currentProfile).CurrentValues.SetValues(profile);
 
             await context.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task<UserProfile?> GetUserProfileByUserId(int userId, CancellationToken cancellationToken)
+        {
+            return await context.Profiles.FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
         }
     }
 }
