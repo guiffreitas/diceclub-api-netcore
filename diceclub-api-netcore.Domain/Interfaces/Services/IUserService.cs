@@ -12,7 +12,7 @@ namespace diceclub_api_netcore.Domain.Interfaces.Services
     public interface IUserService
     {
         Task<IdentityResult> RegisterUser(User user, string password);
-        Task<IdentityResult> ConfirmEmail(string userId, string confirmationToken);
+        Task<IdentityResult> ConfirmEmail(int userId, string confirmationToken);
         Task<LoginModel> LoginUser(string email, string password);
         Task<LoginModel> RefreshLogin(string userToken, string refreshToken);
     }

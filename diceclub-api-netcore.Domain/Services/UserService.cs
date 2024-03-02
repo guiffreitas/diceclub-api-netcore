@@ -16,9 +16,7 @@ namespace diceclub_api_netcore.Domain.Services
         private readonly IEmailService emailService;
         private readonly ITokenService tokenService;
         private readonly ICacheRedisRepository cacheRepository;
-
-        private readonly UserManager<User> userManager;
-        private readonly SignInManager<User> signInManager;
+        private readonly IUserRepository userRepository;
         
         private readonly ApiUrls apiUrls;
 
@@ -26,15 +24,13 @@ namespace diceclub_api_netcore.Domain.Services
             IEmailService emailService, 
             ITokenService tokenService,
             ICacheRedisRepository cacheRepository,
-            UserManager<User> userManager, 
-            SignInManager<User> signInManager, 
+            IUserRepository userRepository,
             IOptions<ApiUrls> apiUrls)
         {
             this.emailService = emailService;
             this.tokenService = tokenService;
             this.cacheRepository = cacheRepository;
-            this.userManager = userManager;
-            this.signInManager = signInManager;
+            this.userRepository = userRepository;
             this.apiUrls = apiUrls.Value;
         }
 
@@ -42,7 +38,7 @@ namespace diceclub_api_netcore.Domain.Services
         {
             try
             {
-                var result = await userManager.CreateAsync(user, password);
+                var result = await userRepository.CreateUser(user, password);
 
                 if(result.Succeeded)
                 {
@@ -65,7 +61,7 @@ namespace diceclub_api_netcore.Domain.Services
 
         public async Task SendConfirmationEmail(User user)
         {
-            var confirmationToken = await userManager.GenerateEmailConfirmationTokenAsync(user);
+            var confirmationToken = await userRepository.GenerateEmailConfirmatioToken(user);
 
             confirmationToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(confirmationToken));
 
@@ -81,14 +77,14 @@ namespace diceclub_api_netcore.Domain.Services
             }
         }
 
-        public async Task<IdentityResult> ConfirmEmail(string userId, string confirmationToken)
+        public async Task<IdentityResult> ConfirmEmail(int userId, string confirmationToken)
         {
             if (confirmationToken == null)
             {
                 return IdentityResult.Failed(new IdentityError() { Description = "Invalid token confirmation"});
             }
 
-            var user = await userManager.FindByIdAsync(userId);
+            var user = await userRepository.GetUserById(userId);
            
             if (user == null)
             {
@@ -97,7 +93,7 @@ namespace diceclub_api_netcore.Domain.Services
 
             var token = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(confirmationToken));
 
-            var result = await userManager.ConfirmEmailAsync(user, token);
+            var result = await userRepository.ConfirmUserEmail(user, token);
             
             if (result.Succeeded)
             {
@@ -115,20 +111,9 @@ namespace diceclub_api_netcore.Domain.Services
         {
             try
             {
-                var user = await userManager.FindByEmailAsync(email);
+                var result = await userRepository.UserSignIn(email, password);
 
-                if (user == default)
-                {
-                    return new LoginModel()
-                    {
-                        Success = false,
-                        Message = $"User {email} could not be found",
-                    };
-                }
-
-                var result = await signInManager.PasswordSignInAsync(user, password, false, false);
-
-                if(!result.Succeeded)
+                if(!result.SignIn.Succeeded)
                 {
                     return new LoginModel()
                     {
@@ -137,7 +122,7 @@ namespace diceclub_api_netcore.Domain.Services
                     };
                 }
 
-                (var userToken, var refreshToken) = GenerateLoginTokens(user);
+                (var userToken, var refreshToken) = GenerateLoginTokens(result.User!);
 
                 if (string.IsNullOrWhiteSpace(userToken) || string.IsNullOrWhiteSpace(refreshToken))
                 {
@@ -148,12 +133,12 @@ namespace diceclub_api_netcore.Domain.Services
                     };
                 }
 
-                await PersistLoginToken(user, userToken, refreshToken);
+                await PersistLoginToken(result.User!, userToken, refreshToken);
 
                 return new LoginModel() 
                 { 
                     Success = true,
-                    Message = $"User {user.UserName} logged",
+                    Message = $"User {result.User!.UserName} logged",
                     UserToken = userToken,
                     RefreshToken = refreshToken
                 };
@@ -179,7 +164,7 @@ namespace diceclub_api_netcore.Domain.Services
                     };
                 }
 
-                var user = await userManager.FindByNameAsync(username);
+                var user = await userRepository.GetUserByName(username);
 
                 if(user == default)
                 {
@@ -228,6 +213,11 @@ namespace diceclub_api_netcore.Domain.Services
             }
         }
 
+        public Task<int?> GetUserIdByUsername(string username)
+        {
+            return userRepository.GetUserIdByUsername(username);
+        }
+
         private (string UserToken, string RefreshToken) GenerateLoginTokens(User user)
         {
             var userToken = tokenService.GenerateUserToken(user);
@@ -239,7 +229,7 @@ namespace diceclub_api_netcore.Domain.Services
 
         private async Task PersistLoginToken(User user,string userToken, string refreshToken)
         {
-            var persistAuthToken = userManager.SetAuthenticationTokenAsync(user, string.Empty, Parameters.Token.AuthToken, userToken);
+            var persistAuthToken = userRepository.SetAuthToken(user, userToken);
 
             var persistRefreshToken = cacheRepository.HashSetAsync(string.Empty, user.Id.ToString(), refreshToken, CacheType.RefreshToken, Parameters.Token.RefreshTokenExpiration);
 
